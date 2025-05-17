@@ -1,0 +1,29 @@
+pipeline {
+agent any
+environment {
+IMAGE_NAME = "secure-todo"
+}
+stages {
+stage('Checkout') {
+steps { git 'https://github.com/your-repo.git' }
+}
+stage('Build Image') {
+steps { sh 'docker build -t $IMAGE_NAME .' }
+}
+stage('Trivy Scan') {
+steps { sh './scripts/trivy-scan.sh' }
+}
+stage('SAST Scan') {
+steps { sh 'sonar-scanner' }
+}
+stage('Deploy to K8s') {
+steps {
+sh 'kubectl apply -f k8s/deployment.yaml'
+sh 'kubectl apply -f k8s/service.yaml'
+}
+}
+stage('Run DAST Scan') {
+steps { sh './scripts/zap-scan.sh' }
+}
+}
+}
